@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Castor EDC - Erasmus MC Clinical Data Collection System</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        castor: {
+                            navy: '#0B1B3D',
+                            darkblue: '#002855',
+                            blue: '#0052CC',
+                            lightbg: '#F8FAFC',
+                            violet: '#6B21A8',
+                            purpleaccent: '#8B5CF6',
+                            purplelight: '#F3E8FF',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6B21A8; }
+
+        .ecrf-status-badge {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .status-complete { background-color: #DCFCE7; color: #166534; border: 1px solid #BBF7D0; }
+        .status-incomplete { background-color: #FEF3C7; color: #92400E; border: 1px solid #FDE68A; }
+        .status-locked { background-color: #F3E8FF; color: #6B21A8; border: 1px solid #E9D5FF; }
+        .status-query { background-color: #FFE4E6; color: #9F1239; border: 1px solid #FECDD3; }
+    </style>
+</head>
+<body class="h-full font-sans text-slate-800 bg-slate-100 flex flex-col antialiased select-none overflow-hidden">
+
+    <!-- Top Header Navigation Bar -->
+    <header class="bg-castor-navy text-white px-6 py-3 border-b border-indigo-950 shadow-md shrink-0 z-30 flex items-center justify-between">
+        <div class="flex items-center space-x-5">
+            <!-- Erasmus MC & Castor EDC logos -->
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-castor-blue via-castor-violet to-castor-purpleaccent p-0.5 shadow-md flex items-center justify-center">
+                    <div class="w-full h-full bg-castor-navy rounded-[10px] flex items-center justify-center">
+                        <i data-lucide="shield-check" class="w-5 h-5 text-castor-purpleaccent"></i>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-black text-white text-lg tracking-tight">CASTOR <span class="text-castor-purpleaccent font-light">EDC</span></span>
+                        <span class="bg-castor-violet/80 text-white font-mono text-[10px] px-2 py-0.5 rounded-full font-semibold border border-castor-purpleaccent/30">Erasmus MC Instance</span>
+                    </div>
+                    <p class="text-[11px] text-slate-300 font-medium leading-none">Electronic Data Capture System • Erasmus University Medical Center Rotterdam</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Compliance & Security Badges -->
+        <div class="hidden lg:flex items-center gap-3">
+            <div class="flex items-center gap-1.5 bg-slate-900/80 border border-slate-700/60 rounded-lg px-2.5 py-1 text-[11px] text-slate-300">
+                <i data-lucide="lock" class="w-3.5 h-3.5 text-emerald-400"></i>
+                <span class="font-medium">21 CFR Part 11 / GCP Compliant</span>
+            </div>
+            <div class="flex items-center gap-1.5 bg-slate-900/80 border border-slate-700/60 rounded-lg px-2.5 py-1 text-[11px] text-slate-300">
+                <i data-lucide="shield" class="w-3.5 h-3.5 text-castor-purpleaccent"></i>
+                <span class="font-medium">GDPR & ISO 27001 Certified</span>
+            </div>
+            
+            <!-- Quick XML Export -->
+            <button onclick="exportCastorXML()" class="ml-2 bg-castor-violet hover:bg-purple-800 text-white font-bold text-xs px-3.5 py-2 rounded-xl flex items-center gap-2 shadow-sm transition-all border border-purple-500/30">
+                <i data-lucide="download" class="w-4 h-4"></i>
+                <span>Exporter XML (CDISC ODM)</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Study Banner & KPI Bar -->
+    <section class="bg-white border-b border-slate-200 px-6 py-2.5 shrink-0 shadow-xs">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <div class="bg-castor-purplelight text-castor-violet p-2 rounded-lg font-bold font-mono text-xs">
+                    EMC-CARDIO-2026-04
+                </div>
+                <div>
+                    <h1 class="text-sm font-bold text-slate-900">EMC-TAVI Trial: Transcatheter Aortic Valve Replacement Long-Term Outcomes</h1>
+                    <p class="text-xs text-slate-500">Principal Investigator: Prof. dr. H. Boersma • Department of Cardiology, Erasmus MC</p>
+                </div>
+            </div>
+
+            <!-- Mini Dashboard Metrics -->
+            <div class="grid grid-cols-4 gap-3 text-xs">
+                <div class="bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg text-center">
+                    <span class="text-[10px] text-slate-500 block uppercase font-bold">Enrolled Subjects</span>
+                    <span class="font-extrabold text-slate-900 font-mono text-sm" id="kpiEnrolled">124 / 150</span>
+                </div>
+                <div class="bg-emerald-50 border border-emerald-100 px-3 py-1.5 rounded-lg text-center">
+                    <span class="text-[10px] text-emerald-700 block uppercase font-bold">Data Completion</span>
+                    <span class="font-extrabold text-emerald-800 font-mono text-sm">92.4 %</span>
+                </div>
+                <div class="bg-purple-50 border border-purple-100 px-3 py-1.5 rounded-lg text-center">
+                    <span class="text-[10px] text-castor-violet block uppercase font-bold">Locked Forms</span>
+                    <span class="font-extrabold text-castor-violet font-mono text-sm">88 %</span>
+                </div>
+                <div class="bg-rose-50 border border-rose-100 px-3 py-1.5 rounded-lg text-center">
+                    <span class="text-[10px] text-rose-700 block uppercase font-bold">Open Queries</span>
+                    <span class="font-extrabold text-rose-800 font-mono text-sm" id="kpiQueries">3 Active</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content Workspace -->
+    <div class="flex-1 flex min-h-0 overflow-hidden">
+
+        <!-- Navigation Sidebar -->
+        <aside class="w-64 bg-castor-navy text-white border-r border-slate-800 flex flex-col justify-between shrink-0">
+            <div class="p-3 space-y-1 overflow-y-auto">
+                <div class="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Castor EDC Modules</div>
+
+                <button onclick="switchTab('ecrf')" id="tab-btn-ecrf" class="w-full text-left px-3 py-2.5 rounded-xl font-medium text-xs flex items-center justify-between transition-all bg-castor-violet text-white font-bold shadow-sm">
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="clipboard-list" class="w-4 h-4 text-castor-purpleaccent"></i>
+                        <span>eCRF Form Entry</span>
+                    </div>
+                    <span class="bg-emerald-500 text-white font-mono text-[9px] px-1.5 py-0.2 rounded-full font-bold">ACTIVE</span>
+                </button>
+
+                <button onclick="switchTab('cohort')" id="tab-btn-cohort" class="w-full text-left px-3 py-2.5 rounded-xl font-medium text-xs flex items-center justify-between transition-all text-slate-300 hover:bg-slate-900">
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="users" class="w-4 h-4 text-slate-400"></i>
+                        <span>Subject Cohorts</span>
+                    </div>
+                    <span class="bg-slate-800 text-slate-300 font-mono text-[10px] px-1.5 py-0.2 rounded-full">124</span>
+                </button>
+
+                <button onclick="switchTab('queries')" id="tab-btn-queries" class="w-full text-left px-3 py-2.5 rounded-xl font-medium text-xs flex items-center justify-between transition-all text-slate-300 hover:bg-slate-900">
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="message-square-warning" class="w-4 h-4 text-amber-400"></i>
+                        <span>Query Management</span>
+                    </div>
+                    <span class="bg-rose-600 text-white font-mono text-[10px] px-1.5 py-0.2 rounded-full font-bold">3</span>
+                </button>
+
+                <button onclick="switchTab('audit')" id="tab-btn-audit" class="w-full text-left px-3 py-2.5 rounded-xl font-medium text-xs flex items-center gap-3 transition-all text-slate-300 hover:bg-slate-900">
+                    <i data-lucide="history" class="w-4 h-4 text-castor-purpleaccent"></i>
+                    <span>Audit Trail & Locks</span>
+                </button>
+
+                <button onclick="switchTab('export')" id="tab-btn-export" class="w-full text-left px-3 py-2.5 rounded-xl font-medium text-xs flex items-center gap-3 transition-all text-slate-300 hover:bg-slate-900">
+                    <i data-lucide="database" class="w-4 h-4 text-blue-400"></i>
+                    <span>Data Export (CDISC/SAS)</span>
+                </button>
+            </div>
+
+            <!-- User Context Footer -->
+            <div class="p-3 bg-slate-950 border-t border-slate-800 text-[11px] text-slate-300">
+                <div class="font-bold text-white flex items-center gap-1.5">
+                    <i data-lucide="user-check" class="w-3.5 h-3.5 text-castor-purpleaccent"></i>
+                    Dr. J. VAN DER MEER
+                </div>
+                <div class="text-slate-400 text-[10px]">Clinical Research Associate (CRA)</div>
+                <div class="text-[10px] text-slate-500 font-mono mt-1">Role: CRA / Data Entry • Site 01 (EMC)</div>
+            </div>
+        </aside>
+
+        <!-- Right Main View Area -->
+        <main class="flex-1 bg-slate-100 p-5 overflow-y-auto">
+
+            <!-- TAB 1: eCRF FORM ENTRY -->
+            <div id="view-ecrf" class="space-y-4 block">
+                
+                <!-- Patient Selector & Visit Steps Bar -->
+                <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs flex flex-wrap items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase">Select Subject ID</label>
+                            <select id="subjectSelector" onchange="loadSubjectData()" class="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-castor-violet focus:outline-none">
+                                <option value="EMC-1001">EMC-1001 (72 y/o Male - Enrolled)</option>
+                                <option value="EMC-1002">EMC-1002 (68 y/o Female - Enrolled)</option>
+                                <option value="EMC-1003">EMC-1003 (81 y/o Male - Query Pending)</option>
+                            </select>
+                        </div>
+
+                        <div class="h-8 w-px bg-slate-200"></div>
+
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-500 uppercase block">Visit Interval</span>
+                            <span class="text-xs font-bold text-castor-violet font-mono">Visit 3: 30-Day Follow-up</span>
+                        </div>
+                    </div>
+
+                    <!-- Visit Form Progress Steps -->
+                    <div class="flex items-center gap-1 text-xs">
+                        <span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-lg font-bold flex items-center gap-1 text-[11px]"><i data-lucide="check" class="w-3 h-3"></i> Screening</span>
+                        <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400"></i>
+                        <span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-lg font-bold flex items-center gap-1 text-[11px]"><i data-lucide="check" class="w-3 h-3"></i> Procedure</span>
+                        <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400"></i>
+                        <span class="px-2.5 py-1 bg-castor-violet text-white rounded-lg font-bold flex items-center gap-1 text-[11px] shadow-xs">30-Day Follow-Up</span>
+                        <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400"></i>
+                        <span class="px-2.5 py-1 bg-slate-100 text-slate-500 rounded-lg font-medium text-[11px]">1-Year Visit</span>
+                    </div>
+                </div>
+
+                <!-- eCRF Form Layout -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                    
+                    <!-- Left eCRF Form Controls -->
+                    <div class="lg:col-span-2 space-y-4">
+                        <form id="ecrfMainForm" onsubmit="saveeCRF(event)" class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs">
+                            <div class="p-4 bg-castor-navy text-white flex justify-between items-center">
+                                <div class="flex items-center gap-2">
+                                    <i data-lucide="file-text" class="w-4 h-4 text-castor-purpleaccent"></i>
+                                    <h2 class="font-bold text-xs uppercase tracking-wider">Clinical Observations & Vitals Form (eCRF-3.1)</h2>
+                                </div>
+                                <span class="text-[10px] font-mono bg-castor-violet/60 px-2 py-0.5 rounded text-purple-100">GCP Validated Form</span>
+                            </div>
+
+                            <div class="p-5 space-y-5 text-xs">
+                                
+                                <!-- Section 1: Informed Consent & Inclusion Status -->
+                                <div class="border border-slate-200 rounded-xl p-4 bg-slate-50/50 space-y-3">
+                                    <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+                                        <h3 class="font-bold text-slate-900 uppercase text-[11px] flex items-center gap-1.5 text-castor-violet">
+                                            <i data-lucide="check-square" class="w-4 h-4"></i>
+                                            1. Informed Consent & Eligibility
+                                        </h3>
+                                        <span class="ecrf-status-badge status-complete"><i data-lucide="check" class="w-3 h-3"></i> Verified</span>
+                                    </div>
+
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="block font-semibold text-slate-700 mb-1">Informed Consent Date</label>
+                                            <input type="date" value="2026-08-14" required class="w-full bg-white border border-slate-300 rounded-lg p-2 font-mono">
+                                        </div>
+                                        <div>
+                                            <label class="block font-semibold text-slate-700 mb-1">Consent Version Signed</label>
+                                            <input type="text" value="v2.4 - Erasmus MC Ethics Bd" readonly class="w-full bg-slate-100 border border-slate-300 rounded-lg p-2 font-mono text-slate-600">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Section 2: Vitals & Lab Biomarkers -->
+                                <div class="border border-slate-200 rounded-xl p-4 bg-slate-50/50 space-y-3">
+                                    <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+                                        <h3 class="font-bold text-slate-900 uppercase text-[11px] flex items-center gap-1.5 text-castor-violet">
+                                            <i data-lucide="activity" class="w-4 h-4"></i>
+                                            2. Hemodynamic & Biomarker Parameters
+                                        </h3>
+                                        <span class="ecrf-status-badge status-incomplete" id="vitalsStatusBadge">In Progress</span>
+                                    </div>
+
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                        <div>
+                                            <label class="block font-semibold text-slate-700 mb-1">Systolic BP (mmHg)</label>
+                                            <input type="number" id="inputSBP" value="138" min="60" max="240" oninput="validateVitals()" class="w-full bg-white border border-slate-300 rounded-lg p-2 font-mono text-slate-900 font-bold focus:border-castor-violet">
+                                            <span class="text-[10px] text-slate-500">Normal Range: 90 - 140</span>
+                                        </div>
+
+                                        <div>
+                                            <label class="block font-semibold text-slate-700 mb-1">Diastolic BP (mmHg)</label>
+                                            <input type="number" id="inputDBP" value="84" min="40" max="140" oninput="validateVitals()" class="w-full bg-white border border-slate-300 rounded-lg p-2 font-mono text-slate-900 font-bold">
+                                            <span class="text-[10px] text-slate-500">Normal Range: 60 - 90</span>
+                                        </div>
+
+                                        <div>
+                                            <label class="block font-semibold text-slate-700 mb-1">Serum Creatinine (µmol/L)</label>
+                                            <input type="number" id="inputCreatinine" value="92" oninput="validateVitals()" class="w-full bg-white border border-slate-300 rounded-lg p-2 font-mono text-slate-900 font-bold">
+                                            <span class="text-[10px] text-slate-500">Erasmus MC Lab Std</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Automated Real-Time Validation Alert Box -->
+                                    <div id="vitalsAlertBox" class="hidden p-2.5 bg-rose-50 border border-rose-200 rounded-lg text-rose-800 text-[11px] items-center gap-2">
+                                        <i data-lucide="alert-circle" class="w-4 h-4 text-rose-600 shrink-0"></i>
+                                        <span id="vitalsAlertText">Value out of range alert. Please confirm or raise a query.</span>
+                                    </div>
+                                </div>
+
+                                <!-- Section 3: Adverse Events (AE / SAE) Multi-line Input -->
+                                <div class="border border-slate-200 rounded-xl p-4 bg-slate-50/50 space-y-3">
+                                    <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+                                        <h3 class="font-bold text-slate-900 uppercase text-[11px] flex items-center gap-1.5 text-castor-violet">
+                                            <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+                                            3. Adverse Events (AE / SAE) Log
+                                        </h3>
+                                        <span class="ecrf-status-badge status-complete">Reported</span>
+                                    </div>
+
+                                    <div>
+                                        <label class="block font-semibold text-slate-700 mb-1">Observed Symptoms / Complications (Multi-line Clinical Notes)</label>
+                                        <textarea id="aeDescription" rows="3" class="w-full bg-white border border-slate-300 rounded-lg p-2.5 font-mono text-slate-800 text-[11px] leading-relaxed">No major vascular access complications observed at Day 30 follow-up. 
+Patient reports mild fatigue. ECG confirms normal sinus rhythm with stable transcatheter aortic valve pressure gradient (mean 8 mmHg).</textarea>
+                                    </div>
+
+                                    <div class="flex items-center gap-4 pt-1">
+                                        <label class="flex items-center gap-2 font-semibold text-slate-700 cursor-pointer">
+                                            <input type="checkbox" id="checkSAE" class="w-4 h-4 rounded text-castor-violet focus:ring-castor-violet border-slate-300">
+                                            <span>Serious Adverse Event (SAE) Triggered?</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- Form Submit and Lock Actions -->
+                                <div class="flex items-center justify-between pt-3 border-t border-slate-200">
+                                    <div class="flex items-center gap-2 text-slate-500 text-[11px]">
+                                        <i data-lucide="save" class="w-4 h-4 text-castor-purpleaccent"></i>
+                                        <span>Auto-saved to Erasmus MC secure vault 2 mins ago</span>
+                                    </div>
+
+                                    <div class="flex items-center gap-2">
+                                        <button type="button" onclick="lockForm()" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold flex items-center gap-1.5 transition-all">
+                                            <i data-lucide="lock" class="w-3.5 h-3.5 text-castor-violet"></i>
+                                            <span>Lock eCRF</span>
+                                        </button>
+                                        <button type="submit" class="px-4 py-2 bg-castor-violet hover:bg-purple-800 text-white rounded-xl font-bold shadow-sm flex items-center gap-1.5 transition-all border border-purple-500/30">
+                                            <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+                                            <span>Save & Complete Visit</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Right Column: Audit & Query Panel for Selected Subject -->
+                    <div class="space-y-4">
+                        
+                        <!-- Query / Data Discrepancy Card -->
+                        <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs space-y-3">
+                            <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+                                <h3 class="font-bold text-xs uppercase text-slate-900 flex items-center gap-1.5">
+                                    <i data-lucide="message-square-warning" class="w-4 h-4 text-amber-500"></i>
+                                    Active Data Queries (1)
+                                </h3>
+                                <span class="bg-amber-100 text-amber-800 font-mono text-[10px] px-2 py-0.5 rounded-full font-bold">Field: Creatinine</span>
+                            </div>
+
+                            <div class="p-3 bg-amber-50/70 border border-amber-200 rounded-xl space-y-2 text-xs">
+                                <div class="flex justify-between items-start">
+                                    <span class="font-bold text-amber-950">QUERY #Q-204</span>
+                                    <span class="text-[10px] text-amber-700 font-mono">Issued by CRA • Yesterday</span>
+                                </div>
+                                <p class="text-slate-700 text-[11px] leading-snug">
+                                    "Creatinine level reported as 92 µmol/L. Please double-check lab printout against baseline value (80 µmol/L)."
+                                </p>
+                                <button onclick="resolveQueryPrompt()" class="w-full bg-amber-600 hover:bg-amber-700 text-white text-[11px] font-bold py-1.5 rounded-lg shadow-xs transition-all">
+                                    Respond & Resolve Query
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Real-time Field Audit Trail -->
+                        <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs space-y-3">
+                            <h3 class="font-bold text-xs uppercase text-slate-900 flex items-center gap-1.5 border-b border-slate-200 pb-2">
+                                <i data-lucide="history" class="w-4 h-4 text-castor-violet"></i>
+                                Field Change Log (Audit Trail)
+                            </h3>
+
+                            <div class="space-y-2.5 text-[11px]">
+                                <div class="p-2 bg-slate-50 border border-slate-200 rounded-lg space-y-1">
+                                    <div class="flex justify-between text-slate-500 font-mono text-[10px]">
+                                        <span>2026-09-28 14:22:01</span>
+                                        <span class="text-castor-violet font-semibold">Dr. J. VAN DER MEER</span>
+                                    </div>
+                                    <div class="text-slate-800 font-medium">Changed <code class="bg-slate-200 px-1 rounded text-purple-900 font-mono">Systolic BP</code> from 145 to 138</div>
+                                    <div class="text-[10px] text-slate-500 italic">Reason: Corrected transcription error</div>
+                                </div>
+
+                                <div class="p-2 bg-slate-50 border border-slate-200 rounded-lg space-y-1">
+                                    <div class="flex justify-between text-slate-500 font-mono text-[10px]">
+                                        <span>2026-08-14 09:10:45</span>
+                                        <span class="text-castor-violet font-semibold">Prof. H. BOERSMA</span>
+                                    </div>
+                                    <div class="text-slate-800 font-medium">Created Subject Record <code class="bg-slate-200 px-1 rounded text-slate-900 font-mono">EMC-1001</code></div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- TAB 2: SUBJECT COHORTS -->
+            <div id="view-cohort" class="space-y-4 hidden">
+                <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs">
+                    <div class="p-4 bg-slate-50 border-b border-slate-200 flex flex-wrap justify-between items-center gap-3">
+                        <div>
+                            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-900 flex items-center gap-2">
+                                <i data-lucide="users" class="w-4 h-4 text-castor-violet"></i>
+                                Patient Cohort Directory - EMC-TAVI Trial
+                            </h2>
+                            <p class="text-xs text-slate-500">Erasmus MC Center Site #01 • 124 Enrolled Subjects</p>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <input type="text" placeholder="Search Subject ID..." class="bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-castor-violet">
+                            <button onclick="addSubjectModal()" class="bg-castor-violet hover:bg-purple-800 text-white font-bold text-xs px-3.5 py-1.5 rounded-lg flex items-center gap-1.5">
+                                <i data-lucide="user-plus" class="w-4 h-4"></i>
+                                <span>Enroll New Subject</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="bg-slate-100 border-b border-slate-200 text-slate-700 font-semibold">
+                                    <th class="p-3">Subject ID</th>
+                                    <th class="p-3">Age / Gender</th>
+                                    <th class="p-3">Inclusion Date</th>
+                                    <th class="p-3">Current Visit</th>
+                                    <th class="p-3">Completion %</th>
+                                    <th class="p-3">Form Status</th>
+                                    <th class="p-3 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-cohort" class="divide-y divide-slate-100 font-medium">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: QUERY MANAGEMENT -->
+            <div id="view-queries" class="space-y-4 hidden">
+                <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs space-y-4">
+                    <div class="flex justify-between items-center border-b border-slate-200 pb-3">
+                        <div>
+                            <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                                <i data-lucide="message-square-warning" class="w-5 h-5 text-amber-500"></i>
+                                Study-Wide Query & Data Discrepancy Manager
+                            </h2>
+                            <p class="text-xs text-slate-500">Track and resolve queries raised by Monitors (CRA) and Data Managers</p>
+                        </div>
+                        <span class="bg-rose-100 text-rose-800 text-xs font-mono font-bold px-3 py-1 rounded-full border border-rose-200">
+                            3 Open Queries Requiring Action
+                        </span>
+                    </div>
+
+                    <div class="space-y-3" id="queryListContainer">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 4: AUDIT TRAIL & LOCKS -->
+            <div id="view-audit" class="space-y-4 hidden">
+                <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs space-y-4">
+                    <div class="flex justify-between items-center border-b border-slate-200 pb-3">
+                        <div>
+                            <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                                <i data-lucide="shield-check" class="w-5 h-5 text-castor-violet"></i>
+                                Regulatory Audit Trail & Data Lock Status
+                            </h2>
+                            <p class="text-xs text-slate-500">Immutable 21 CFR Part 11 compliant event log for Erasmus MC Ethics Board</p>
+                        </div>
+                        <span class="bg-emerald-100 text-emerald-800 font-mono text-xs font-bold px-3 py-1 rounded-full">
+                            Database Integrity: Verified
+                        </span>
+                    </div>
+
+                    <div class="bg-slate-900 text-slate-200 font-mono text-xs p-4 rounded-xl space-y-2 overflow-x-auto">
+                        <div class="text-slate-400 border-b border-slate-800 pb-2 flex justify-between">
+                            <span>TIMESTAMP (UTC)</span>
+                            <span>USER ID / ROLE</span>
+                            <span>ACTION TYPE</span>
+                            <span>RECORD ID</span>
+                        </div>
+                        <div class="text-emerald-400">[2026-10-07 11:02:14] DR_VDMEER (CRA) -> FORM_LOCK_APPLIED -> EMC-1001/VISIT-02</div>
+                        <div class="text-slate-300">[2026-10-06 16:45:30] PROF_BOERSMA (PI) -> DATA_VERIFIED -> EMC-1002/LABS</div>
+                        <div class="text-amber-300">[2026-10-05 09:12:08] SYSTEM_VALIDATOR -> AUTO_QUERY_RAISED -> EMC-1003/VITALS</div>
+                        <div class="text-slate-400">[2026-10-04 14:00:19] DR_VDMEER (CRA) -> SUBJECT_ENROLLED -> EMC-1004</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 5: DATA EXPORT MODULE -->
+            <div id="view-export" class="space-y-4 hidden">
+                <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs space-y-4">
+                    <div class="border-b border-slate-200 pb-3">
+                        <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                            <i data-lucide="database" class="w-5 h-5 text-castor-blue"></i>
+                            Clinical Trial Data Export Module
+                        </h2>
+                        <p class="text-xs text-slate-500">Export pseudonymized trial datasets in standard clinical data formats</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="p-4 border border-castor-violet/40 bg-castor-purplelight/30 rounded-xl space-y-3 flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center justify-between mb-2">
+                                    <h3 class="font-bold text-castor-violet text-xs">CDISC ODM XML Format</h3>
+                                    <span class="bg-castor-violet text-white text-[9px] font-mono px-2 py-0.5 rounded font-bold">Standard</span>
+                                </div>
+                                <p class="text-slate-600 text-[11px]">Complete eCRF structure and metadata XML compliant with CDISC ODM v1.3.2 standards.</p>
+                            </div>
+                            <button onclick="exportCastorXML()" class="w-full bg-castor-violet hover:bg-purple-800 text-white font-bold text-xs py-2 rounded-lg flex items-center justify-center gap-2 shadow-xs transition-all">
+                                <i data-lucide="download" class="w-4 h-4"></i> Download XML Dataset
+                            </button>
+                        </div>
+
+                        <div class="p-4 border border-slate-200 bg-slate-50 rounded-xl space-y-3 flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center justify-between mb-2">
+                                    <h3 class="font-bold text-slate-800 text-xs">CSV Data Package</h3>
+                                    <span class="bg-slate-200 text-slate-700 text-[9px] font-mono px-2 py-0.5 rounded font-bold">Raw Data</span>
+                                </div>
+                                <p class="text-slate-600 text-[11px]">Tabular CSV files separated by domain (Demographics, Vitals, AE, Labs) with data dictionary.</p>
+                            </div>
+                            <button onclick="alert('Exporting CSV zip bundle...')" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs py-2 rounded-lg flex items-center justify-center gap-2 shadow-xs transition-all">
+                                <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Download CSV Zip
+                            </button>
+                        </div>
+
+                        <div class="p-4 border border-slate-200 bg-slate-50 rounded-xl space-y-3 flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center justify-between mb-2">
+                                    <h3 class="font-bold text-slate-800 text-xs">SPSS / SAS Formats</h3>
+                                    <span class="bg-slate-200 text-slate-700 text-[9px] font-mono px-2 py-0.5 rounded font-bold">Biostatistics</span>
+                                </div>
+                                <p class="text-slate-600 text-[11px]">Pre-formatted datasets with value labels and variable syntax for SPSS (.sav) and SAS (.sas7bdat).</p>
+                            </div>
+                            <button onclick="alert('Exporting SPSS file package...')" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs py-2 rounded-lg flex items-center justify-center gap-2 shadow-xs transition-all">
+                                <i data-lucide="binary" class="w-4 h-4"></i> Download SPSS Package
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        /* Castor EDC Clinical Trial Dataset */
+        const cohortData = [
+            { id: "EMC-1001", ageGender: "72 y/o Male", date: "2026-08-14", visit: "Visit 3 (30-Day)", progress: "100%", status: "Locked", sbp: 138, dbp: 84, creat: 92 },
+            { id: "EMC-1002", ageGender: "68 y/o Female", date: "2026-08-20", visit: "Visit 2 (Procedure)", progress: "85%", status: "In Progress", sbp: 124, dbp: 78, creat: 81 },
+            { id: "EMC-1003", ageGender: "81 y/o Male", date: "2026-09-02", visit: "Visit 3 (30-Day)", progress: "90%", status: "Query Open", sbp: 156, dbp: 94, creat: 110 },
+            { id: "EMC-1004", ageGender: "75 y/o Female", date: "2026-09-15", visit: "Visit 1 (Screening)", progress: "100%", status: "Complete", sbp: 130, dbp: 80, creat: 88 }
+        ];
+
+        const queryData = [
+            { id: "Q-204", subject: "EMC-1003", field: "Systolic BP", note: "SBP value (156 mmHg) exceeds protocol threshold (140 mmHg). Please confirm if grade 1 hypertension was recorded in AE form.", author: "CRA Monitor", date: "2026-10-05" },
+            { id: "Q-205", subject: "EMC-1002", field: "Informed Consent", note: "Re-consent document v2.4 signature date missing in upload.", author: "Data Manager", date: "2026-10-06" },
+            { id: "Q-206", subject: "EMC-1001", field: "Serum Creatinine", note: "Verify lab units (µmol/L vs mg/dL) for consistency across Erasmus MC central lab.", author: "Lead Monitor", date: "2026-10-04" }
+        ];
+
+        /* Tab Switch Logic */
+        function switchTab(tabKey) {
+            ['ecrf', 'cohort', 'queries', 'audit', 'export'].forEach(t => {
+                document.getElementById(`view-${t}`).classList.add('hidden');
+                document.getElementById(`tab-btn-${t}`).className = "w-full text-left px-3 py-2.5 rounded-xl font-medium text-xs flex items-center justify-between transition-all text-slate-300 hover:bg-slate-900";
+            });
+
+            document.getElementById(`view-${tabKey}`).classList.remove('hidden');
+            document.getElementById(`tab-btn-${tabKey}`).className = "w-full text-left px-3 py-2.5 rounded-xl font-medium text-xs flex items-center justify-between transition-all bg-castor-violet text-white font-bold shadow-sm";
+        }
+
+        /* Render Cohort Directory Table */
+        function renderCohortTable() {
+            const tbody = document.getElementById("tbody-cohort");
+            tbody.innerHTML = cohortData.map(c => `
+                <tr class="hover:bg-slate-50 transition-all border-b border-slate-100">
+                    <td class="p-3 font-mono font-bold text-castor-violet">${c.id}</td>
+                    <td class="p-3 text-slate-700">${c.ageGender}</td>
+                    <td class="p-3 font-mono text-slate-600">${c.date}</td>
+                    <td class="p-3 font-semibold text-slate-800">${c.visit}</td>
+                    <td class="p-3">
+                        <div class="flex items-center gap-2">
+                            <div class="w-16 bg-slate-200 h-2 rounded-full overflow-hidden">
+                                <div class="bg-castor-violet h-full" style="width: ${c.progress}"></div>
+                            </div>
+                            <span class="font-mono text-[10px] text-slate-600">${c.progress}</span>
+                        </div>
+                    </td>
+                    <td class="p-3">${getStatusBadgeHTML(c.status)}</td>
+                    <td class="p-3 text-right">
+                        <button onclick="selectSubject('${c.id}')" class="px-2.5 py-1 bg-slate-100 hover:bg-purple-100 text-castor-violet font-bold rounded-lg text-[11px] transition-all">
+                            Open eCRF
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+
+            lucide.createIcons();
+        }
+
+        function getStatusBadgeHTML(status) {
+            if(status === 'Locked') return `<span class="ecrf-status-badge status-locked"><i data-lucide="lock" class="w-3 h-3"></i> Locked</span>`;
+            if(status === 'Complete') return `<span class="ecrf-status-badge status-complete"><i data-lucide="check" class="w-3 h-3"></i> Complete</span>`;
+            if(status === 'Query Open') return `<span class="ecrf-status-badge status-query"><i data-lucide="alert-circle" class="w-3 h-3"></i> Query</span>`;
+            return `<span class="ecrf-status-badge status-incomplete"><i data-lucide="clock" class="w-3 h-3"></i> In Progress</span>`;
+        }
+
+        /* Render Query Manager */
+        function renderQueries() {
+            const container = document.getElementById("queryListContainer");
+            container.innerHTML = queryData.map((q, idx) => `
+                <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl flex flex-wrap items-center justify-between gap-3">
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="bg-amber-600 text-white text-[10px] font-mono font-bold px-2 py-0.5 rounded">${q.id}</span>
+                            <span class="font-bold text-xs text-slate-900">Subject: ${q.subject} • Field: ${q.field}</span>
+                        </div>
+                        <p class="text-xs text-slate-700 leading-snug font-medium max-w-2xl">"${q.note}"</p>
+                        <div class="text-[10px] text-slate-500 font-mono">Raised by ${q.author} on ${q.date}</div>
+                    </div>
+                    <button onclick="resolveQueryIndex(${idx})" class="bg-castor-violet hover:bg-purple-800 text-white font-bold text-xs px-3.5 py-2 rounded-xl shadow-xs transition-all">
+                        Resolve & Answer Query
+                    </button>
+                </div>
+            `).join('');
+
+            lucide.createIcons();
+        }
+
+        /* Vitals Validation Logic */
+        function validateVitals() {
+            const sbp = parseInt(document.getElementById("inputSBP").value) || 0;
+            const alertBox = document.getElementById("vitalsAlertBox");
+            const alertText = document.getElementById("vitalsAlertText");
+
+            if (sbp > 140) {
+                alertBox.classList.remove("hidden");
+                alertBox.classList.add("flex");
+                alertText.textContent = `Systolic BP (${sbp} mmHg) exceeds standard protocol target (140 mmHg). Auto-flagged for monitoring.`;
+            } else {
+                alertBox.classList.add("hidden");
+                alertBox.classList.remove("flex");
+            }
+        }
+
+        function loadSubjectData() {
+            const id = document.getElementById("subjectSelector").value;
+            const subj = cohortData.find(c => c.id === id);
+            if (subj) {
+                document.getElementById("inputSBP").value = subj.sbp;
+                document.getElementById("inputDBP").value = subj.dbp;
+                document.getElementById("inputCreatinine").value = subj.creat;
+                validateVitals();
+            }
+        }
+
+        function selectSubject(id) {
+            document.getElementById("subjectSelector").value = id;
+            loadSubjectData();
+            switchTab('ecrf');
+        }
+
+        function saveeCRF(e) {
+            e.preventDefault();
+            alert("eCRF data successfully saved to Erasmus MC Castor EDC database vault!");
+        }
+
+        function lockForm() {
+            alert("Form locked! Digital signature applied by Dr. J. VAN DER MEER (CRA). Further edits require query un-locking.");
+        }
+
+        function resolveQueryPrompt() {
+            alert("Query Q-204 status updated to 'Resolved by CRA'. Audit trail entry generated.");
+        }
+
+        function resolveQueryIndex(idx) {
+            queryData.splice(idx, 1);
+            renderQueries();
+            document.getElementById("kpiQueries").textContent = `${queryData.length} Active`;
+        }
+
+        function addSubjectModal() {
+            const newID = `EMC-100${cohortData.length + 1}`;
+            cohortData.push({ id: newID, ageGender: "70 y/o Male", date: "2026-10-07", visit: "Visit 1 (Screening)", progress: "20%", status: "In Progress", sbp: 128, dbp: 80, creat: 85 });
+            renderCohortTable();
+            document.getElementById("kpiEnrolled").textContent = `${cohortData.length} / 150`;
+            alert(`New subject ${newID} successfully enrolled into EMC-TAVI trial cohort.`);
+        }
+
+        /* CDISC ODM / Castor XML Exporter */
+        function exportCastorXML() {
+            let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<ODM xmlns="http://www.cdisc.org/ns/odm/v1.3" ODMVersion="1.3.2" FileType="Snapshot" CreationDateTime="${new Date().toISOString()}" SourceSystem="Castor EDC - Erasmus MC">\n`;
+            xml += `  <ClinicalData StudyOID="EMC-CARDIO-2026-04" MetaDataVersionOID="v2.4">\n`;
+            xml += `    <SiteRef LocationOID="EMC-ROTTERDAM-SITE-01" />\n`;
+
+            cohortData.forEach(c => {
+                xml += `    <SubjectData SubjectKey="${c.id}">\n`;
+                xml += `      <StudyEventData StudyEventOID="VISIT_30_DAY">\n`;
+                xml += `        <FormData FormOID="FORM_VITALS_BIOMARKERS" FormRepeatKey="1">\n`;
+                xml += `          <ItemGroupData ItemGroupOID="VITALS">\n`;
+                xml += `            <ItemData ItemOID="SBP" Value="${c.sbp}" Unit="mmHg"/>\n`;
+                xml += `            <ItemData ItemOID="DBP" Value="${c.dbp}" Unit="mmHg"/>\n`;
+                xml += `            <ItemData ItemOID="SERUM_CREATININE" Value="${c.creat}" Unit="umol/L"/>\n`;
+                xml += `          </ItemGroupData>\n`;
+                xml += `        </FormData>\n`;
+                xml += `      </StudyEventData>\n`;
+                xml += `    </SubjectData>\n`;
+            });
+
+            xml += `  </ClinicalData>\n</ODM>`;
+
+            const blob = new Blob([xml], { type: 'application/xml' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `castor_edc_erasmus_mc_export.xml`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        window.onload = function() {
+            lucide.createIcons();
+            renderCohortTable();
+            renderQueries();
+            validateVitals();
+        };
+    </script>
+</body>
+</html>
+```
+
+### Highlights of this Castor EDC Erasmus MC simulation:
+- **Official Erasmus MC & Castor EDC Styling:** Formatted with dark blue (`#0B1B3D`), pure white backgrounds, and deep violet/purple (`#6B21A8`) accents.
+- **Regulatory Badges:** Built-in compliance tags for GCP, 21 CFR Part 11, GDPR, and ISO 27001.
+- **Interactive eCRF Form (Cardiology Trial Protocol):** Includes dynamic range validation on Vitals & Biomarkers (e.g. Systolic BP alerts), pre-populated multi-line Adverse Events logs, and GCP Form locking.
+- **Subject Cohort Directory & Query Manager:** Live interactive data updates with real-time stats (enrolled subjects, data completeness, query count).
+- **CDISC ODM XML Data Exporter:** Functional download mechanism for structured clinical trial XML files (`castor_edc_erasmus_mc_export.xml`).
